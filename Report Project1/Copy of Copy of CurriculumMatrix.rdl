@@ -1,0 +1,2744 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Report MustUnderstand="df" xmlns="http://schemas.microsoft.com/sqlserver/reporting/2016/01/reportdefinition" xmlns:rd="http://schemas.microsoft.com/SQLServer/reporting/reportdesigner" xmlns:df="http://schemas.microsoft.com/sqlserver/reporting/2016/01/reportdefinition/defaultfontfamily">
+  <df:DefaultFontFamily>Segoe UI</df:DefaultFontFamily>
+  <AutoRefresh>0</AutoRefresh>
+  <DataSources>
+    <DataSource Name="Curriculum">
+      <ConnectionProperties>
+        <DataProvider>SQL</DataProvider>
+        <ConnectString>Data Source=.;Initial Catalog=Curriculum</ConnectString>
+        <IntegratedSecurity>true</IntegratedSecurity>
+      </ConnectionProperties>
+      <rd:SecurityType>Integrated</rd:SecurityType>
+      <rd:DataSourceID>6679597b-f112-4d94-8b5f-98a62893c28f</rd:DataSourceID>
+    </DataSource>
+  </DataSources>
+  <DataSets>
+    <DataSet Name="ActiveCourseDataSet">
+      <Query>
+        <DataSourceName>Curriculum</DataSourceName>
+        <CommandText>SELECT COUNT(*) AS Course_count
+FROM   ADF_Course
+WHERE (CourseActive = 'y')</CommandText>
+      </Query>
+      <Fields>
+        <Field Name="Course_count">
+          <DataField>Course_count</DataField>
+          <rd:TypeName>System.Int32</rd:TypeName>
+        </Field>
+      </Fields>
+    </DataSet>
+    <DataSet Name="SectionDataSet1">
+      <Query>
+        <DataSourceName>Curriculum</DataSourceName>
+        <CommandText>SELECT COUNT(*) AS Section_count FROM ADF_Section WHERE SectionActive = 'y'</CommandText>
+      </Query>
+      <Fields>
+        <Field Name="Section_count">
+          <DataField>Section_count</DataField>
+          <rd:TypeName>System.Int32</rd:TypeName>
+        </Field>
+      </Fields>
+    </DataSet>
+    <DataSet Name="EventDataSet">
+      <Query>
+        <DataSourceName>Curriculum</DataSourceName>
+        <CommandText>SELECT COUNT(*) AS 'Active Events'
+FROM   ADF_Event
+WHERE (EventActive = 'y')</CommandText>
+        <rd:UseGenericDesigner>true</rd:UseGenericDesigner>
+      </Query>
+      <Fields>
+        <Field Name="Active_Events">
+          <DataField>Active Events</DataField>
+          <rd:TypeName>System.Int32</rd:TypeName>
+        </Field>
+      </Fields>
+    </DataSet>
+    <DataSet Name="MainDataSet">
+      <Query>
+        <DataSourceName>Curriculum</DataSourceName>
+        <CommandText>SELECT COUNT(path.PathActive) AS 'Active Paths',
+       COUNT(course.CourseActive) AS 'Active Courses',
+       COUNT(section.SectionActive) AS 'Active Sections',
+       COUNT(e.EventActive) AS 'Active Events'
+FROM ADF_Path path
+LEFT JOIN ADF_Course course ON course.PathID = path.PathID
+LEFT JOIN ADF_Section section ON section.CourseID = course.CourseID
+LEFT JOIN ADF_Event e ON e.EventID = section.SectionID
+WHERE path.PathActive = 'y' OR course.CourseActive = 'y' OR section.SectionActive = 'y' OR e.EventActive = 'y';</CommandText>
+        <rd:UseGenericDesigner>true</rd:UseGenericDesigner>
+      </Query>
+      <Fields>
+        <Field Name="Active_Paths">
+          <DataField>Active Paths</DataField>
+          <rd:TypeName>System.Int32</rd:TypeName>
+        </Field>
+        <Field Name="Active_Courses">
+          <DataField>Active Courses</DataField>
+          <rd:TypeName>System.Int32</rd:TypeName>
+        </Field>
+        <Field Name="Active_Sections">
+          <DataField>Active Sections</DataField>
+          <rd:TypeName>System.Int32</rd:TypeName>
+        </Field>
+        <Field Name="Active_Events">
+          <DataField>Active Events</DataField>
+          <rd:TypeName>System.Int32</rd:TypeName>
+        </Field>
+      </Fields>
+    </DataSet>
+    <DataSet Name="MatrixDataSet">
+      <Query>
+        <DataSourceName>Curriculum</DataSourceName>
+        <QueryParameters>
+          <QueryParameter Name="@Path">
+            <Value>=Parameters!Path.Value</Value>
+          </QueryParameter>
+          <QueryParameter Name="@Course">
+            <Value>=Parameters!Course.Value</Value>
+          </QueryParameter>
+          <QueryParameter Name="@Sections">
+            <Value>=Parameters!Sections.Value</Value>
+          </QueryParameter>
+          <QueryParameter Name="@Events">
+            <Value>=Parameters!Events.Value</Value>
+          </QueryParameter>
+        </QueryParameters>
+        <CommandText>SELECT COALESCE (path.PathName, 'Total') AS Path, COALESCE (course.CourseName, 'Total') AS Course, COALESCE (section.SectionName, 'Total') AS Section, COUNT(e.EventName) AS Events
+FROM   ADF_Path path LEFT JOIN
+             ADF_Course course ON course.PathID = path.PathID LEFT JOIN
+             ADF_Section section ON section.CourseID = course.CourseID LEFT JOIN
+             ADF_Event e ON e.SectionID = section.SectionID
+WHERE (path.PathName IS NOT NULL AND path.PathActive = 'y') OR
+             (course.CourseName IS NOT NULL AND course.CourseActive = 'y') OR
+             (section.SectionName IS NOT NULL AND section.SectionActive = 'y') OR
+             (e.EventID IS NOT NULL AND e.EventActive = 'y') OR
+             (path.PathName IN (@Path)) OR
+             (course.CourseName IN (@Course)) OR
+             (section.SectionName IN (@Sections)) OR
+             (e.EventName IN (@Events))
+GROUP BY GROUPING SETS((path.PathName, course.CourseName, section.SectionName), (path.PathName, course.CourseName), (path.PathName), (e.EventName))
+ORDER BY path.PathName ASC, course.CourseName ASC, section.SectionName ASC;</CommandText>
+        <rd:UseGenericDesigner>true</rd:UseGenericDesigner>
+      </Query>
+      <Fields>
+        <Field Name="Path">
+          <DataField>Path</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="Course">
+          <DataField>Course</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="Section">
+          <DataField>Section</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="Events">
+          <DataField>Events</DataField>
+          <rd:TypeName>System.Int32</rd:TypeName>
+        </Field>
+      </Fields>
+    </DataSet>
+    <DataSet Name="PathParamDataSet">
+      <Query>
+        <DataSourceName>Curriculum</DataSourceName>
+        <CommandText>SELECT DISTINCT PathName AS Path
+FROM   CurriculumOutlines</CommandText>
+        <rd:UseGenericDesigner>true</rd:UseGenericDesigner>
+      </Query>
+      <Fields>
+        <Field Name="Path">
+          <DataField>Path</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+      </Fields>
+    </DataSet>
+    <DataSet Name="CourseParamDataSet">
+      <Query>
+        <DataSourceName>Curriculum</DataSourceName>
+        <CommandText>SELECT DISTINCT CourseName AS Courses
+FROM   CurriculumOutlines
+ORDER BY Courses DESC</CommandText>
+        <rd:UseGenericDesigner>true</rd:UseGenericDesigner>
+      </Query>
+      <Fields>
+        <Field Name="Courses">
+          <DataField>Courses</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+      </Fields>
+    </DataSet>
+    <DataSet Name="SectionParamDataSet">
+      <Query>
+        <DataSourceName>Curriculum</DataSourceName>
+        <CommandText>SELECT DISTINCT SectionName AS Sections
+FROM   CurriculumOutlines
+ORDER BY Sections DESC</CommandText>
+        <rd:UseGenericDesigner>true</rd:UseGenericDesigner>
+      </Query>
+      <Fields>
+        <Field Name="Sections">
+          <DataField>Sections</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+      </Fields>
+    </DataSet>
+    <DataSet Name="EventParamDataSet">
+      <Query>
+        <DataSourceName>Curriculum</DataSourceName>
+        <CommandText>SELECT DISTINCT EventID AS Events 
+FROM  vw_curriculum
+ORDER BY Events DESC</CommandText>
+        <rd:UseGenericDesigner>true</rd:UseGenericDesigner>
+      </Query>
+      <Fields>
+        <Field Name="Events">
+          <DataField>Events</DataField>
+          <rd:TypeName>System.Int32</rd:TypeName>
+        </Field>
+      </Fields>
+    </DataSet>
+    <DataSet Name="CurriculumCountDataSet">
+      <Query>
+        <DataSourceName>Curriculum</DataSourceName>
+        <CommandText>SELECT COUNT(path.PathName) AS Paths, COUNT(course.CourseName) AS Courses, COUNT(section.SectionName) AS Sections, COUNT(e.EventID) AS Events
+FROM   ADF_Path AS path LEFT OUTER JOIN
+             ADF_Course AS course ON course.PathID = path.PathID LEFT OUTER JOIN
+             ADF_Section AS section ON section.CourseID = course.CourseID LEFT OUTER JOIN
+             ADF_Event AS e ON e.EventID = section.SectionID</CommandText>
+        <rd:UseGenericDesigner>true</rd:UseGenericDesigner>
+      </Query>
+      <Fields>
+        <Field Name="Paths">
+          <DataField>Paths</DataField>
+          <rd:TypeName>System.Int32</rd:TypeName>
+        </Field>
+        <Field Name="Courses">
+          <DataField>Courses</DataField>
+          <rd:TypeName>System.Int32</rd:TypeName>
+        </Field>
+        <Field Name="Sections">
+          <DataField>Sections</DataField>
+          <rd:TypeName>System.Int32</rd:TypeName>
+        </Field>
+        <Field Name="Events">
+          <DataField>Events</DataField>
+          <rd:TypeName>System.Int32</rd:TypeName>
+        </Field>
+      </Fields>
+    </DataSet>
+    <DataSet Name="CurriculumManagerMatrixDataSet">
+      <Query>
+        <DataSourceName>Curriculum</DataSourceName>
+        <QueryParameters>
+          <QueryParameter Name="@Path">
+            <Value>=Parameters!Path.Value</Value>
+          </QueryParameter>
+          <QueryParameter Name="@Course">
+            <Value>=Parameters!Course.Value</Value>
+          </QueryParameter>
+          <QueryParameter Name="@Sections">
+            <Value>=Parameters!Sections.Value</Value>
+          </QueryParameter>
+          <QueryParameter Name="@Events">
+            <Value>=Parameters!Events.Value</Value>
+          </QueryParameter>
+        </QueryParameters>
+        <CommandText>SELECT path.PathName, course.CourseName, section.SectionName, e.EventName
+  FROM ADF_Path path
+	LEFT JOIN ADF_Course course ON course.PathID = path.PathID
+	LEFT JOIN ADF_Section section ON section.CourseID = course.CourseID
+	LEFT JOIN ADF_Document document ON document.DocumentID = section.SectionID
+	LEFT JOIN ADF_EventType event ON event.EventTypeID = section.SectionID
+	LEFT JOIN ADF_Event e ON e.EventID = section.SectionID
+WHERE (path.PathName IN (@Path)) OR
+      (course.CourseName IN (@Course)) OR
+      (section.SectionName IN (@Sections)) OR
+      (e.EventName IN (@Events))
+ORDER BY path.PathName, course.CourseName, section.SectionName, e.EventName DESC</CommandText>
+        <rd:UseGenericDesigner>true</rd:UseGenericDesigner>
+      </Query>
+      <Fields>
+        <Field Name="PathName">
+          <DataField>PathName</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="CourseName">
+          <DataField>CourseName</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="SectionName">
+          <DataField>SectionName</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="EventName">
+          <DataField>EventName</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+      </Fields>
+    </DataSet>
+  </DataSets>
+  <ReportSections>
+    <ReportSection>
+      <Body>
+        <ReportItems>
+          <GaugePanel Name="GaugePanel9">
+            <RadialGauges>
+              <RadialGauge Name="RadialGauge1">
+                <PivotX>75</PivotX>
+                <PivotY>75</PivotY>
+                <GaugeScales>
+                  <RadialScale Name="RadialScale1">
+                    <Radius>55</Radius>
+                    <StartAngle>90</StartAngle>
+                    <SweepAngle>90</SweepAngle>
+                    <GaugePointers>
+                      <RadialPointer Name="RadialPointer1">
+                        <PointerCap>
+                          <Style>
+                            <BackgroundColor>White</BackgroundColor>
+                            <BackgroundGradientType>DiagonalLeft</BackgroundGradientType>
+                            <BackgroundGradientEndColor>DimGray</BackgroundGradientEndColor>
+                            <FontFamily>Arial</FontFamily>
+                            <BackgroundHatchType>None</BackgroundHatchType>
+                          </Style>
+                          <CapImage>
+                            <OffsetX>0pt</OffsetX>
+                            <OffsetY>0pt</OffsetY>
+                            <Source>External</Source>
+                            <Value />
+                          </CapImage>
+                          <OnTop>true</OnTop>
+                          <CapStyle>RoundedWithWideIndentation</CapStyle>
+                          <Width>33</Width>
+                        </PointerCap>
+                        <NeedleStyle>StealthArrow</NeedleStyle>
+                        <Style>
+                          <Border>
+                            <Style>None</Style>
+                          </Border>
+                          <BackgroundColor>#01b8aa</BackgroundColor>
+                          <BackgroundGradientType>None</BackgroundGradientType>
+                          <BackgroundGradientEndColor>Orange</BackgroundGradientEndColor>
+                          <BackgroundHatchType>None</BackgroundHatchType>
+                          <ShadowOffset>0pt</ShadowOffset>
+                        </Style>
+                        <GaugeInputValue>
+                          <Value>=Sum(Fields!Course_count.Value)</Value>
+                          <Multiplier>1</Multiplier>
+                        </GaugeInputValue>
+                        <PointerImage>
+                          <OffsetX>0pt</OffsetX>
+                          <OffsetY>0pt</OffsetY>
+                          <Source>External</Source>
+                          <Value />
+                        </PointerImage>
+                        <MarkerLength>25</MarkerLength>
+                        <MarkerStyle>Wedge</MarkerStyle>
+                        <Placement>Cross</Placement>
+                        <Width>30</Width>
+                      </RadialPointer>
+                    </GaugePointers>
+                    <Style>
+                      <Border>
+                        <Style>None</Style>
+                      </Border>
+                      <BackgroundColor>LightGrey</BackgroundColor>
+                      <BackgroundGradientType>None</BackgroundGradientType>
+                      <BackgroundGradientEndColor>White</BackgroundGradientEndColor>
+                      <BackgroundHatchType>None</BackgroundHatchType>
+                      <ShadowOffset>0pt</ShadowOffset>
+                    </Style>
+                    <Interval>NaN</Interval>
+                    <IntervalOffset>NaN</IntervalOffset>
+                    <MaximumValue>
+                      <Value>50</Value>
+                      <Multiplier>1</Multiplier>
+                    </MaximumValue>
+                    <MinimumValue>
+                      <Value>0</Value>
+                      <Multiplier>1</Multiplier>
+                    </MinimumValue>
+                    <GaugeMajorTickMarks>
+                      <Interval>NaN</Interval>
+                      <IntervalOffset>NaN</IntervalOffset>
+                      <Style>
+                        <Border>
+                          <Color>DimGray</Color>
+                          <Style>Solid</Style>
+                        </Border>
+                        <BackgroundColor>WhiteSmoke</BackgroundColor>
+                      </Style>
+                      <Placement>Cross</Placement>
+                      <TickMarkImage>
+                        <Source>External</Source>
+                        <Value />
+                      </TickMarkImage>
+                      <Length>14</Length>
+                      <Width>8</Width>
+                      <Shape>Trapezoid</Shape>
+                    </GaugeMajorTickMarks>
+                    <GaugeMinorTickMarks>
+                      <Interval>NaN</Interval>
+                      <IntervalOffset>NaN</IntervalOffset>
+                      <Style>
+                        <Border>
+                          <Color>DimGray</Color>
+                          <Style>Solid</Style>
+                        </Border>
+                        <BackgroundColor>WhiteSmoke</BackgroundColor>
+                      </Style>
+                      <Placement>Cross</Placement>
+                      <TickMarkImage>
+                        <Source>External</Source>
+                        <Value />
+                      </TickMarkImage>
+                      <Length>8</Length>
+                      <Width>3</Width>
+                    </GaugeMinorTickMarks>
+                    <MaximumPin>
+                      <PinLabel>
+                        <Style>
+                          <FontSize>12pt</FontSize>
+                        </Style>
+                        <DistanceFromScale>0</DistanceFromScale>
+                      </PinLabel>
+                      <Style>
+                        <Border>
+                          <Color>DimGray</Color>
+                          <Style>Solid</Style>
+                        </Border>
+                        <BackgroundColor>WhiteSmoke</BackgroundColor>
+                      </Style>
+                      <Placement>Cross</Placement>
+                      <TickMarkImage>
+                        <Source>External</Source>
+                        <Value />
+                      </TickMarkImage>
+                      <Length>6</Length>
+                      <Width>6</Width>
+                      <Shape>Circle</Shape>
+                    </MaximumPin>
+                    <MinimumPin>
+                      <PinLabel>
+                        <Style>
+                          <FontSize>12pt</FontSize>
+                        </Style>
+                        <DistanceFromScale>0</DistanceFromScale>
+                      </PinLabel>
+                      <Style>
+                        <Border>
+                          <Color>DimGray</Color>
+                          <Style>Solid</Style>
+                        </Border>
+                        <BackgroundColor>WhiteSmoke</BackgroundColor>
+                      </Style>
+                      <Placement>Cross</Placement>
+                      <TickMarkImage>
+                        <Source>External</Source>
+                        <Value />
+                      </TickMarkImage>
+                      <Length>6</Length>
+                      <Width>6</Width>
+                      <Shape>Circle</Shape>
+                    </MinimumPin>
+                    <ScaleLabels>
+                      <Style>
+                        <FontSize>14pt</FontSize>
+                      </Style>
+                      <Interval>NaN</Interval>
+                      <IntervalOffset>NaN</IntervalOffset>
+                      <DistanceFromScale>0</DistanceFromScale>
+                      <Placement>Outside</Placement>
+                      <ShowEndLabels>true</ShowEndLabels>
+                      <UseFontPercent>true</UseFontPercent>
+                    </ScaleLabels>
+                    <Width>30</Width>
+                  </RadialScale>
+                </GaugeScales>
+                <BackFrame>
+                  <Style>
+                    <Border>
+                      <Style>None</Style>
+                    </Border>
+                    <BackgroundColor>WhiteSmoke</BackgroundColor>
+                    <BackgroundGradientType>None</BackgroundGradientType>
+                    <BackgroundGradientEndColor>Gainsboro</BackgroundGradientEndColor>
+                    <BackgroundHatchType>None</BackgroundHatchType>
+                    <ShadowOffset>0pt</ShadowOffset>
+                  </Style>
+                  <FrameShape>CustomQuarterCircularNW1</FrameShape>
+                  <FrameBackground>
+                    <Style>
+                      <BackgroundColor>WhiteSmoke</BackgroundColor>
+                      <BackgroundGradientType>DiagonalLeft</BackgroundGradientType>
+                      <BackgroundGradientEndColor>Gray</BackgroundGradientEndColor>
+                      <BackgroundHatchType>None</BackgroundHatchType>
+                    </Style>
+                  </FrameBackground>
+                  <FrameImage>
+                    <Source>External</Source>
+                    <Value />
+                  </FrameImage>
+                </BackFrame>
+                <ClipContent>true</ClipContent>
+                <TopImage>
+                  <Source>External</Source>
+                  <Value />
+                </TopImage>
+                <AspectRatio>1</AspectRatio>
+                <Height>100</Height>
+                <Width>100</Width>
+              </RadialGauge>
+            </RadialGauges>
+            <AutoLayout>true</AutoLayout>
+            <BackFrame>
+              <Style>
+                <Border>
+                  <Style>None</Style>
+                </Border>
+                <BackgroundColor>Gainsboro</BackgroundColor>
+                <BackgroundGradientType>None</BackgroundGradientType>
+                <BackgroundGradientEndColor>Gray</BackgroundGradientEndColor>
+                <BackgroundHatchType>None</BackgroundHatchType>
+                <ShadowOffset>0pt</ShadowOffset>
+              </Style>
+              <FrameBackground>
+                <Style>
+                  <BackgroundColor>Silver</BackgroundColor>
+                  <BackgroundGradientType>DiagonalLeft</BackgroundGradientType>
+                  <BackgroundGradientEndColor>Gray</BackgroundGradientEndColor>
+                  <BackgroundHatchType>None</BackgroundHatchType>
+                </Style>
+              </FrameBackground>
+              <FrameImage>
+                <Source>External</Source>
+                <Value />
+              </FrameImage>
+            </BackFrame>
+            <TopImage>
+              <Source>External</Source>
+              <Value />
+            </TopImage>
+            <DataSetName>ActiveCourseDataSet</DataSetName>
+            <Top>1.00694in</Top>
+            <Left>0.18292in</Left>
+            <Height>1.45139in</Height>
+            <Width>2.00695in</Width>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <BackgroundColor>White</BackgroundColor>
+            </Style>
+          </GaugePanel>
+          <GaugePanel Name="GaugePanel1">
+            <RadialGauges>
+              <RadialGauge Name="RadialGauge1">
+                <PivotX>75</PivotX>
+                <PivotY>75</PivotY>
+                <GaugeScales>
+                  <RadialScale Name="RadialScale1">
+                    <Radius>55</Radius>
+                    <StartAngle>90</StartAngle>
+                    <SweepAngle>90</SweepAngle>
+                    <GaugePointers>
+                      <RadialPointer Name="RadialPointer1">
+                        <PointerCap>
+                          <Style>
+                            <BackgroundColor>White</BackgroundColor>
+                            <BackgroundGradientType>DiagonalLeft</BackgroundGradientType>
+                            <BackgroundGradientEndColor>DimGray</BackgroundGradientEndColor>
+                            <FontFamily>Arial</FontFamily>
+                            <BackgroundHatchType>None</BackgroundHatchType>
+                          </Style>
+                          <CapImage>
+                            <OffsetX>0pt</OffsetX>
+                            <OffsetY>0pt</OffsetY>
+                            <Source>External</Source>
+                            <Value />
+                          </CapImage>
+                          <OnTop>true</OnTop>
+                          <CapStyle>RoundedWithWideIndentation</CapStyle>
+                          <Width>33</Width>
+                        </PointerCap>
+                        <NeedleStyle>StealthArrow</NeedleStyle>
+                        <Style>
+                          <Border>
+                            <Style>None</Style>
+                          </Border>
+                          <BackgroundColor>#01b8aa</BackgroundColor>
+                          <BackgroundGradientType>None</BackgroundGradientType>
+                          <BackgroundGradientEndColor>Orange</BackgroundGradientEndColor>
+                          <BackgroundHatchType>None</BackgroundHatchType>
+                          <ShadowOffset>0pt</ShadowOffset>
+                        </Style>
+                        <GaugeInputValue>
+                          <Value>=Sum(Fields!Section_count.Value)</Value>
+                          <Multiplier>1</Multiplier>
+                        </GaugeInputValue>
+                        <PointerImage>
+                          <OffsetX>0pt</OffsetX>
+                          <OffsetY>0pt</OffsetY>
+                          <Source>External</Source>
+                          <Value />
+                        </PointerImage>
+                        <MarkerLength>25</MarkerLength>
+                        <MarkerStyle>Wedge</MarkerStyle>
+                        <Placement>Cross</Placement>
+                        <Width>30</Width>
+                      </RadialPointer>
+                    </GaugePointers>
+                    <Style>
+                      <Border>
+                        <Style>None</Style>
+                      </Border>
+                      <BackgroundColor>LightGrey</BackgroundColor>
+                      <BackgroundGradientType>None</BackgroundGradientType>
+                      <BackgroundGradientEndColor>White</BackgroundGradientEndColor>
+                      <BackgroundHatchType>None</BackgroundHatchType>
+                      <ShadowOffset>0pt</ShadowOffset>
+                    </Style>
+                    <Interval>NaN</Interval>
+                    <IntervalOffset>NaN</IntervalOffset>
+                    <MaximumValue>
+                      <Value>500</Value>
+                      <Multiplier>1</Multiplier>
+                    </MaximumValue>
+                    <MinimumValue>
+                      <Value>0</Value>
+                      <Multiplier>1</Multiplier>
+                    </MinimumValue>
+                    <GaugeMajorTickMarks>
+                      <Interval>NaN</Interval>
+                      <IntervalOffset>NaN</IntervalOffset>
+                      <Style>
+                        <Border>
+                          <Color>DimGray</Color>
+                          <Style>Solid</Style>
+                        </Border>
+                        <BackgroundColor>WhiteSmoke</BackgroundColor>
+                      </Style>
+                      <Placement>Cross</Placement>
+                      <TickMarkImage>
+                        <Source>External</Source>
+                        <Value />
+                      </TickMarkImage>
+                      <Length>14</Length>
+                      <Width>8</Width>
+                      <Shape>Trapezoid</Shape>
+                      <Hidden>true</Hidden>
+                    </GaugeMajorTickMarks>
+                    <GaugeMinorTickMarks>
+                      <Interval>NaN</Interval>
+                      <IntervalOffset>NaN</IntervalOffset>
+                      <Style>
+                        <Border>
+                          <Color>DimGray</Color>
+                          <Style>Solid</Style>
+                        </Border>
+                        <BackgroundColor>WhiteSmoke</BackgroundColor>
+                      </Style>
+                      <Placement>Cross</Placement>
+                      <TickMarkImage>
+                        <Source>External</Source>
+                        <Value />
+                      </TickMarkImage>
+                      <Length>8</Length>
+                      <Width>3</Width>
+                    </GaugeMinorTickMarks>
+                    <MaximumPin>
+                      <PinLabel>
+                        <Style>
+                          <FontSize>12pt</FontSize>
+                        </Style>
+                        <DistanceFromScale>0</DistanceFromScale>
+                      </PinLabel>
+                      <Style>
+                        <Border>
+                          <Color>DimGray</Color>
+                          <Style>Solid</Style>
+                        </Border>
+                        <BackgroundColor>WhiteSmoke</BackgroundColor>
+                      </Style>
+                      <Placement>Cross</Placement>
+                      <TickMarkImage>
+                        <Source>External</Source>
+                        <Value />
+                      </TickMarkImage>
+                      <Length>6</Length>
+                      <Width>6</Width>
+                      <Shape>Circle</Shape>
+                    </MaximumPin>
+                    <MinimumPin>
+                      <PinLabel>
+                        <Style>
+                          <FontSize>12pt</FontSize>
+                        </Style>
+                        <DistanceFromScale>0</DistanceFromScale>
+                      </PinLabel>
+                      <Style>
+                        <Border>
+                          <Color>DimGray</Color>
+                          <Style>Solid</Style>
+                        </Border>
+                        <BackgroundColor>WhiteSmoke</BackgroundColor>
+                      </Style>
+                      <Placement>Cross</Placement>
+                      <TickMarkImage>
+                        <Source>External</Source>
+                        <Value />
+                      </TickMarkImage>
+                      <Length>6</Length>
+                      <Width>6</Width>
+                      <Shape>Circle</Shape>
+                    </MinimumPin>
+                    <ScaleLabels>
+                      <Style>
+                        <FontSize>14pt</FontSize>
+                      </Style>
+                      <Interval>NaN</Interval>
+                      <IntervalOffset>NaN</IntervalOffset>
+                      <DistanceFromScale>0</DistanceFromScale>
+                      <Placement>Outside</Placement>
+                      <ShowEndLabels>true</ShowEndLabels>
+                      <UseFontPercent>true</UseFontPercent>
+                    </ScaleLabels>
+                    <Width>30</Width>
+                  </RadialScale>
+                </GaugeScales>
+                <BackFrame>
+                  <Style>
+                    <Border>
+                      <Style>None</Style>
+                    </Border>
+                    <BackgroundColor>WhiteSmoke</BackgroundColor>
+                    <BackgroundGradientType>None</BackgroundGradientType>
+                    <BackgroundGradientEndColor>Gainsboro</BackgroundGradientEndColor>
+                    <BackgroundHatchType>None</BackgroundHatchType>
+                    <ShadowOffset>0pt</ShadowOffset>
+                  </Style>
+                  <FrameShape>CustomQuarterCircularNW1</FrameShape>
+                  <FrameBackground>
+                    <Style>
+                      <BackgroundColor>WhiteSmoke</BackgroundColor>
+                      <BackgroundGradientType>DiagonalLeft</BackgroundGradientType>
+                      <BackgroundGradientEndColor>Gray</BackgroundGradientEndColor>
+                      <BackgroundHatchType>None</BackgroundHatchType>
+                    </Style>
+                  </FrameBackground>
+                  <FrameImage>
+                    <Source>External</Source>
+                    <Value />
+                  </FrameImage>
+                </BackFrame>
+                <ClipContent>true</ClipContent>
+                <TopImage>
+                  <Source>External</Source>
+                  <Value />
+                </TopImage>
+                <AspectRatio>1</AspectRatio>
+                <Height>100</Height>
+                <Width>100</Width>
+              </RadialGauge>
+            </RadialGauges>
+            <AutoLayout>true</AutoLayout>
+            <BackFrame>
+              <Style>
+                <Border>
+                  <Style>None</Style>
+                </Border>
+                <BackgroundColor>Gainsboro</BackgroundColor>
+                <BackgroundGradientType>None</BackgroundGradientType>
+                <BackgroundGradientEndColor>Gray</BackgroundGradientEndColor>
+                <BackgroundHatchType>None</BackgroundHatchType>
+                <ShadowOffset>0pt</ShadowOffset>
+              </Style>
+              <FrameBackground>
+                <Style>
+                  <BackgroundColor>Silver</BackgroundColor>
+                  <BackgroundGradientType>DiagonalLeft</BackgroundGradientType>
+                  <BackgroundGradientEndColor>Gray</BackgroundGradientEndColor>
+                  <BackgroundHatchType>None</BackgroundHatchType>
+                </Style>
+              </FrameBackground>
+              <FrameImage>
+                <Source>External</Source>
+                <Value />
+              </FrameImage>
+            </BackFrame>
+            <TopImage>
+              <Source>External</Source>
+              <Value />
+            </TopImage>
+            <DataSetName>SectionDataSet1</DataSetName>
+            <Top>1.00694in</Top>
+            <Left>2.35429in</Left>
+            <Height>1.45139in</Height>
+            <Width>2.00695in</Width>
+            <ZIndex>1</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <BackgroundColor>White</BackgroundColor>
+            </Style>
+          </GaugePanel>
+          <GaugePanel Name="GaugePanel2">
+            <RadialGauges>
+              <RadialGauge Name="RadialGauge1">
+                <PivotX>75</PivotX>
+                <PivotY>75</PivotY>
+                <GaugeScales>
+                  <RadialScale Name="RadialScale1">
+                    <Radius>55</Radius>
+                    <StartAngle>90</StartAngle>
+                    <SweepAngle>90</SweepAngle>
+                    <GaugePointers>
+                      <RadialPointer Name="RadialPointer1">
+                        <PointerCap>
+                          <Style>
+                            <BackgroundColor>White</BackgroundColor>
+                            <BackgroundGradientType>DiagonalLeft</BackgroundGradientType>
+                            <BackgroundGradientEndColor>DimGray</BackgroundGradientEndColor>
+                            <FontFamily>Arial</FontFamily>
+                            <BackgroundHatchType>None</BackgroundHatchType>
+                          </Style>
+                          <CapImage>
+                            <OffsetX>0pt</OffsetX>
+                            <OffsetY>0pt</OffsetY>
+                            <Source>External</Source>
+                            <Value />
+                          </CapImage>
+                          <OnTop>true</OnTop>
+                          <CapStyle>RoundedWithWideIndentation</CapStyle>
+                          <Width>33</Width>
+                        </PointerCap>
+                        <NeedleStyle>StealthArrow</NeedleStyle>
+                        <Style>
+                          <Border>
+                            <Style>None</Style>
+                          </Border>
+                          <BackgroundColor>#01b8aa</BackgroundColor>
+                          <BackgroundGradientType>None</BackgroundGradientType>
+                          <BackgroundGradientEndColor>Orange</BackgroundGradientEndColor>
+                          <BackgroundHatchType>None</BackgroundHatchType>
+                          <ShadowOffset>0pt</ShadowOffset>
+                        </Style>
+                        <GaugeInputValue>
+                          <Value>=Sum(Fields!Active_Events.Value)</Value>
+                          <Multiplier>1</Multiplier>
+                        </GaugeInputValue>
+                        <PointerImage>
+                          <OffsetX>0pt</OffsetX>
+                          <OffsetY>0pt</OffsetY>
+                          <Source>External</Source>
+                          <Value />
+                        </PointerImage>
+                        <MarkerLength>25</MarkerLength>
+                        <MarkerStyle>Wedge</MarkerStyle>
+                        <Placement>Cross</Placement>
+                        <Width>30</Width>
+                      </RadialPointer>
+                    </GaugePointers>
+                    <Style>
+                      <Border>
+                        <Style>None</Style>
+                      </Border>
+                      <BackgroundColor>LightGrey</BackgroundColor>
+                      <BackgroundGradientType>None</BackgroundGradientType>
+                      <BackgroundGradientEndColor>White</BackgroundGradientEndColor>
+                      <BackgroundHatchType>None</BackgroundHatchType>
+                      <ShadowOffset>0pt</ShadowOffset>
+                    </Style>
+                    <Interval>NaN</Interval>
+                    <IntervalOffset>NaN</IntervalOffset>
+                    <MaximumValue>
+                      <Value>1000</Value>
+                      <Multiplier>1</Multiplier>
+                    </MaximumValue>
+                    <MinimumValue>
+                      <Value>0</Value>
+                      <Multiplier>1</Multiplier>
+                    </MinimumValue>
+                    <GaugeMajorTickMarks>
+                      <Interval>NaN</Interval>
+                      <IntervalOffset>NaN</IntervalOffset>
+                      <Style>
+                        <Border>
+                          <Color>DimGray</Color>
+                          <Style>Solid</Style>
+                        </Border>
+                        <BackgroundColor>WhiteSmoke</BackgroundColor>
+                      </Style>
+                      <Placement>Cross</Placement>
+                      <TickMarkImage>
+                        <Source>External</Source>
+                        <Value />
+                      </TickMarkImage>
+                      <Length>14</Length>
+                      <Width>8</Width>
+                      <Shape>Trapezoid</Shape>
+                      <Hidden>true</Hidden>
+                    </GaugeMajorTickMarks>
+                    <GaugeMinorTickMarks>
+                      <Interval>NaN</Interval>
+                      <IntervalOffset>NaN</IntervalOffset>
+                      <Style>
+                        <Border>
+                          <Color>DimGray</Color>
+                          <Style>Solid</Style>
+                        </Border>
+                        <BackgroundColor>WhiteSmoke</BackgroundColor>
+                      </Style>
+                      <Placement>Cross</Placement>
+                      <TickMarkImage>
+                        <Source>External</Source>
+                        <Value />
+                      </TickMarkImage>
+                      <Length>8</Length>
+                      <Width>3</Width>
+                    </GaugeMinorTickMarks>
+                    <MaximumPin>
+                      <PinLabel>
+                        <Style>
+                          <FontSize>12pt</FontSize>
+                        </Style>
+                        <DistanceFromScale>0</DistanceFromScale>
+                      </PinLabel>
+                      <Style>
+                        <Border>
+                          <Color>DimGray</Color>
+                          <Style>Solid</Style>
+                        </Border>
+                        <BackgroundColor>WhiteSmoke</BackgroundColor>
+                      </Style>
+                      <Placement>Cross</Placement>
+                      <TickMarkImage>
+                        <Source>External</Source>
+                        <Value />
+                      </TickMarkImage>
+                      <Length>6</Length>
+                      <Width>6</Width>
+                      <Shape>Circle</Shape>
+                    </MaximumPin>
+                    <MinimumPin>
+                      <PinLabel>
+                        <Style>
+                          <FontSize>12pt</FontSize>
+                        </Style>
+                        <DistanceFromScale>0</DistanceFromScale>
+                      </PinLabel>
+                      <Style>
+                        <Border>
+                          <Color>DimGray</Color>
+                          <Style>Solid</Style>
+                        </Border>
+                        <BackgroundColor>WhiteSmoke</BackgroundColor>
+                      </Style>
+                      <Placement>Cross</Placement>
+                      <TickMarkImage>
+                        <Source>External</Source>
+                        <Value />
+                      </TickMarkImage>
+                      <Length>6</Length>
+                      <Width>6</Width>
+                      <Shape>Circle</Shape>
+                    </MinimumPin>
+                    <ScaleLabels>
+                      <Style>
+                        <FontSize>14pt</FontSize>
+                      </Style>
+                      <Interval>NaN</Interval>
+                      <IntervalOffset>NaN</IntervalOffset>
+                      <DistanceFromScale>0</DistanceFromScale>
+                      <Placement>Outside</Placement>
+                      <ShowEndLabels>true</ShowEndLabels>
+                      <UseFontPercent>true</UseFontPercent>
+                    </ScaleLabels>
+                    <Width>30</Width>
+                  </RadialScale>
+                </GaugeScales>
+                <BackFrame>
+                  <Style>
+                    <Border>
+                      <Style>None</Style>
+                    </Border>
+                    <BackgroundColor>WhiteSmoke</BackgroundColor>
+                    <BackgroundGradientType>None</BackgroundGradientType>
+                    <BackgroundGradientEndColor>Gainsboro</BackgroundGradientEndColor>
+                    <BackgroundHatchType>None</BackgroundHatchType>
+                    <ShadowOffset>0pt</ShadowOffset>
+                  </Style>
+                  <FrameShape>CustomQuarterCircularNW1</FrameShape>
+                  <FrameBackground>
+                    <Style>
+                      <BackgroundColor>WhiteSmoke</BackgroundColor>
+                      <BackgroundGradientType>DiagonalLeft</BackgroundGradientType>
+                      <BackgroundGradientEndColor>Gray</BackgroundGradientEndColor>
+                      <BackgroundHatchType>None</BackgroundHatchType>
+                    </Style>
+                  </FrameBackground>
+                  <FrameImage>
+                    <Source>External</Source>
+                    <Value />
+                  </FrameImage>
+                </BackFrame>
+                <ClipContent>true</ClipContent>
+                <TopImage>
+                  <Source>External</Source>
+                  <Value />
+                </TopImage>
+                <AspectRatio>1</AspectRatio>
+                <Height>100</Height>
+                <Width>100</Width>
+              </RadialGauge>
+            </RadialGauges>
+            <AutoLayout>true</AutoLayout>
+            <BackFrame>
+              <Style>
+                <Border>
+                  <Style>None</Style>
+                </Border>
+                <BackgroundColor>Gainsboro</BackgroundColor>
+                <BackgroundGradientType>None</BackgroundGradientType>
+                <BackgroundGradientEndColor>Gray</BackgroundGradientEndColor>
+                <BackgroundHatchType>None</BackgroundHatchType>
+                <ShadowOffset>0pt</ShadowOffset>
+              </Style>
+              <FrameBackground>
+                <Style>
+                  <BackgroundColor>Silver</BackgroundColor>
+                  <BackgroundGradientType>DiagonalLeft</BackgroundGradientType>
+                  <BackgroundGradientEndColor>Gray</BackgroundGradientEndColor>
+                  <BackgroundHatchType>None</BackgroundHatchType>
+                </Style>
+              </FrameBackground>
+              <FrameImage>
+                <Source>External</Source>
+                <Value />
+              </FrameImage>
+            </BackFrame>
+            <TopImage>
+              <Source>External</Source>
+              <Value />
+            </TopImage>
+            <DataSetName>EventDataSet</DataSetName>
+            <Top>1.00694in</Top>
+            <Left>4.58569in</Left>
+            <Height>1.45139in</Height>
+            <Width>2.00695in</Width>
+            <ZIndex>2</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <BackgroundColor>White</BackgroundColor>
+            </Style>
+          </GaugePanel>
+          <Textbox Name="Textbox15">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>Active Course</Value>
+                    <Style>
+                      <FontWeight>Bold</FontWeight>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox15</rd:DefaultName>
+            <Top>0.70139in</Top>
+            <Left>0.18292in</Left>
+            <Height>0.25in</Height>
+            <Width>1in</Width>
+            <ZIndex>3</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="Textbox16">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>Curriculum Manager</Value>
+                    <Style>
+                      <FontWeight>Bold</FontWeight>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox15</rd:DefaultName>
+            <Top>5.85639in</Top>
+            <Left>0.18292in</Left>
+            <Height>0.25in</Height>
+            <Width>1.5in</Width>
+            <ZIndex>4</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="Textbox17">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>Active Events</Value>
+                    <Style>
+                      <FontWeight>Bold</FontWeight>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox15</rd:DefaultName>
+            <Top>0.69667in</Top>
+            <Left>4.58569in</Left>
+            <Height>0.25in</Height>
+            <Width>1.27778in</Width>
+            <ZIndex>5</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="Textbox18">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>Active Section</Value>
+                    <Style>
+                      <FontWeight>Bold</FontWeight>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox15</rd:DefaultName>
+            <Top>0.69667in</Top>
+            <Left>2.35429in</Left>
+            <Height>0.25in</Height>
+            <Width>1.06944in</Width>
+            <ZIndex>6</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="Textbox19">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>Curriculum Count</Value>
+                    <Style>
+                      <FontWeight>Bold</FontWeight>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox15</rd:DefaultName>
+            <Top>2.81944in</Top>
+            <Left>0.18292in</Left>
+            <Height>0.26389in</Height>
+            <Width>1.74541in</Width>
+            <ZIndex>7</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Line Name="Line1">
+            <Top>0.95139in</Top>
+            <Left>0.18292in</Left>
+            <Height>0in</Height>
+            <Width>2.00695in</Width>
+            <ZIndex>8</ZIndex>
+            <Style>
+              <Border>
+                <Color>Orange</Color>
+                <Style>Solid</Style>
+              </Border>
+            </Style>
+          </Line>
+          <Line Name="Line2">
+            <Top>0.94667in</Top>
+            <Left>2.35429in</Left>
+            <Height>0in</Height>
+            <Width>2.00695in</Width>
+            <ZIndex>9</ZIndex>
+            <Style>
+              <Border>
+                <Color>Orange</Color>
+                <Style>Solid</Style>
+              </Border>
+            </Style>
+          </Line>
+          <Line Name="Line3">
+            <Top>0.9375in</Top>
+            <Left>4.58569in</Left>
+            <Height>0in</Height>
+            <Width>2.02547in</Width>
+            <ZIndex>10</ZIndex>
+            <Style>
+              <Border>
+                <Color>Orange</Color>
+                <Style>Solid</Style>
+              </Border>
+            </Style>
+          </Line>
+          <Line Name="Line4">
+            <Top>3.08333in</Top>
+            <Left>0.18292in</Left>
+            <Height>0in</Height>
+            <Width>2.00695in</Width>
+            <ZIndex>11</ZIndex>
+            <Style>
+              <Border>
+                <Color>Orange</Color>
+                <Style>Solid</Style>
+              </Border>
+            </Style>
+          </Line>
+          <Line Name="Line5">
+            <Top>6.13417in</Top>
+            <Left>0.18292in</Left>
+            <Height>0in</Height>
+            <Width>3.99764in</Width>
+            <ZIndex>12</ZIndex>
+            <Style>
+              <Border>
+                <Color>Orange</Color>
+                <Style>Solid</Style>
+              </Border>
+            </Style>
+          </Line>
+          <Tablix Name="Tablix3">
+            <TablixCorner>
+              <TablixCornerRows>
+                <TablixCornerRow>
+                  <TablixCornerCell>
+                    <CellContents>
+                      <Textbox Name="Textbox24">
+                        <CanGrow>true</CanGrow>
+                        <KeepTogether>true</KeepTogether>
+                        <Paragraphs>
+                          <Paragraph>
+                            <TextRuns>
+                              <TextRun>
+                                <Value>Paths</Value>
+                                <Style>
+                                  <FontWeight>Bold</FontWeight>
+                                  <Color>White</Color>
+                                </Style>
+                              </TextRun>
+                            </TextRuns>
+                            <Style>
+                              <TextAlign>Center</TextAlign>
+                            </Style>
+                          </Paragraph>
+                        </Paragraphs>
+                        <rd:DefaultName>Textbox24</rd:DefaultName>
+                        <Style>
+                          <Border>
+                            <Color>LightGrey</Color>
+                            <Style>Solid</Style>
+                          </Border>
+                          <BackgroundColor>Maroon</BackgroundColor>
+                          <PaddingLeft>2pt</PaddingLeft>
+                          <PaddingRight>2pt</PaddingRight>
+                          <PaddingTop>2pt</PaddingTop>
+                          <PaddingBottom>2pt</PaddingBottom>
+                        </Style>
+                      </Textbox>
+                    </CellContents>
+                  </TablixCornerCell>
+                  <TablixCornerCell>
+                    <CellContents>
+                      <Textbox Name="Textbox29">
+                        <CanGrow>true</CanGrow>
+                        <KeepTogether>true</KeepTogether>
+                        <Paragraphs>
+                          <Paragraph>
+                            <TextRuns>
+                              <TextRun>
+                                <Value>Courses</Value>
+                                <Style>
+                                  <FontFamily>Arial</FontFamily>
+                                  <FontWeight>Bold</FontWeight>
+                                  <Color>White</Color>
+                                </Style>
+                              </TextRun>
+                            </TextRuns>
+                            <Style>
+                              <TextAlign>Center</TextAlign>
+                            </Style>
+                          </Paragraph>
+                        </Paragraphs>
+                        <rd:DefaultName>Textbox29</rd:DefaultName>
+                        <Style>
+                          <Border>
+                            <Color>LightGrey</Color>
+                            <Style>Solid</Style>
+                          </Border>
+                          <BackgroundColor>Maroon</BackgroundColor>
+                          <PaddingLeft>2pt</PaddingLeft>
+                          <PaddingRight>2pt</PaddingRight>
+                          <PaddingTop>2pt</PaddingTop>
+                          <PaddingBottom>2pt</PaddingBottom>
+                        </Style>
+                      </Textbox>
+                    </CellContents>
+                  </TablixCornerCell>
+                  <TablixCornerCell>
+                    <CellContents>
+                      <Textbox Name="Textbox31">
+                        <CanGrow>true</CanGrow>
+                        <KeepTogether>true</KeepTogether>
+                        <Paragraphs>
+                          <Paragraph>
+                            <TextRuns>
+                              <TextRun>
+                                <Value>Sections</Value>
+                                <Style>
+                                  <FontFamily>Arial</FontFamily>
+                                  <FontWeight>Bold</FontWeight>
+                                  <Color>White</Color>
+                                </Style>
+                              </TextRun>
+                            </TextRuns>
+                            <Style>
+                              <TextAlign>Center</TextAlign>
+                            </Style>
+                          </Paragraph>
+                        </Paragraphs>
+                        <rd:DefaultName>Textbox31</rd:DefaultName>
+                        <Style>
+                          <Border>
+                            <Color>LightGrey</Color>
+                            <Style>Solid</Style>
+                          </Border>
+                          <BackgroundColor>Maroon</BackgroundColor>
+                          <PaddingLeft>2pt</PaddingLeft>
+                          <PaddingRight>2pt</PaddingRight>
+                          <PaddingTop>2pt</PaddingTop>
+                          <PaddingBottom>2pt</PaddingBottom>
+                        </Style>
+                      </Textbox>
+                    </CellContents>
+                  </TablixCornerCell>
+                </TablixCornerRow>
+              </TablixCornerRows>
+            </TablixCorner>
+            <TablixBody>
+              <TablixColumns>
+                <TablixColumn>
+                  <Width>1in</Width>
+                </TablixColumn>
+              </TablixColumns>
+              <TablixRows>
+                <TablixRow>
+                  <Height>0.25in</Height>
+                  <TablixCells>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Events">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>=Sum(Fields!Events.Value, "MatrixDataSet")</Value>
+                                  <Style />
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <rd:DefaultName>Events</rd:DefaultName>
+                          <Style>
+                            <Border>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                            </Border>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                  </TablixCells>
+                </TablixRow>
+              </TablixRows>
+            </TablixBody>
+            <TablixColumnHierarchy>
+              <TablixMembers>
+                <TablixMember>
+                  <Group Name="Events">
+                    <GroupExpressions>
+                      <GroupExpression>=Fields!Events.Value</GroupExpression>
+                    </GroupExpressions>
+                  </Group>
+                  <SortExpressions>
+                    <SortExpression>
+                      <Value>=Fields!Events.Value</Value>
+                    </SortExpression>
+                  </SortExpressions>
+                  <TablixHeader>
+                    <Size>0.25in</Size>
+                    <CellContents>
+                      <Textbox Name="Events1">
+                        <CanGrow>true</CanGrow>
+                        <KeepTogether>true</KeepTogether>
+                        <Paragraphs>
+                          <Paragraph>
+                            <TextRuns>
+                              <TextRun>
+                                <Value>Events</Value>
+                                <Style>
+                                  <FontWeight>Bold</FontWeight>
+                                  <Color>White</Color>
+                                </Style>
+                              </TextRun>
+                            </TextRuns>
+                            <Style>
+                              <TextAlign>Center</TextAlign>
+                            </Style>
+                          </Paragraph>
+                        </Paragraphs>
+                        <rd:DefaultName>Events1</rd:DefaultName>
+                        <Style>
+                          <Border>
+                            <Color>LightGrey</Color>
+                            <Style>Solid</Style>
+                          </Border>
+                          <BackgroundColor>Maroon</BackgroundColor>
+                          <PaddingLeft>2pt</PaddingLeft>
+                          <PaddingRight>2pt</PaddingRight>
+                          <PaddingTop>2pt</PaddingTop>
+                          <PaddingBottom>2pt</PaddingBottom>
+                        </Style>
+                      </Textbox>
+                    </CellContents>
+                  </TablixHeader>
+                </TablixMember>
+              </TablixMembers>
+            </TablixColumnHierarchy>
+            <TablixRowHierarchy>
+              <TablixMembers>
+                <TablixMember>
+                  <Group Name="Path">
+                    <GroupExpressions>
+                      <GroupExpression>=Fields!Path.Value</GroupExpression>
+                    </GroupExpressions>
+                  </Group>
+                  <SortExpressions>
+                    <SortExpression>
+                      <Value>=Fields!Path.Value</Value>
+                    </SortExpression>
+                  </SortExpressions>
+                  <TablixHeader>
+                    <Size>0.64583in</Size>
+                    <CellContents>
+                      <Textbox Name="Path">
+                        <CanGrow>true</CanGrow>
+                        <KeepTogether>true</KeepTogether>
+                        <Paragraphs>
+                          <Paragraph>
+                            <TextRuns>
+                              <TextRun>
+                                <Value>=Fields!Path.Value</Value>
+                                <Style />
+                              </TextRun>
+                            </TextRuns>
+                            <Style />
+                          </Paragraph>
+                        </Paragraphs>
+                        <rd:DefaultName>Path</rd:DefaultName>
+                        <Style>
+                          <Border>
+                            <Color>LightGrey</Color>
+                            <Style>Solid</Style>
+                          </Border>
+                          <PaddingLeft>2pt</PaddingLeft>
+                          <PaddingRight>2pt</PaddingRight>
+                          <PaddingTop>2pt</PaddingTop>
+                          <PaddingBottom>2pt</PaddingBottom>
+                        </Style>
+                      </Textbox>
+                    </CellContents>
+                  </TablixHeader>
+                  <TablixMembers>
+                    <TablixMember>
+                      <Group Name="Course">
+                        <GroupExpressions>
+                          <GroupExpression>=Fields!Course.Value</GroupExpression>
+                        </GroupExpressions>
+                      </Group>
+                      <SortExpressions>
+                        <SortExpression>
+                          <Value>=Fields!Course.Value</Value>
+                        </SortExpression>
+                      </SortExpressions>
+                      <TablixHeader>
+                        <Size>1.1782in</Size>
+                        <CellContents>
+                          <Textbox Name="Course">
+                            <CanGrow>true</CanGrow>
+                            <KeepTogether>true</KeepTogether>
+                            <Paragraphs>
+                              <Paragraph>
+                                <TextRuns>
+                                  <TextRun>
+                                    <Value>=Fields!Course.Value</Value>
+                                    <Style>
+                                      <FontFamily>Arial</FontFamily>
+                                    </Style>
+                                  </TextRun>
+                                </TextRuns>
+                                <Style />
+                              </Paragraph>
+                            </Paragraphs>
+                            <rd:DefaultName>Course</rd:DefaultName>
+                            <Style>
+                              <Border>
+                                <Color>LightGrey</Color>
+                                <Style>Solid</Style>
+                              </Border>
+                              <PaddingLeft>2pt</PaddingLeft>
+                              <PaddingRight>2pt</PaddingRight>
+                              <PaddingTop>2pt</PaddingTop>
+                              <PaddingBottom>2pt</PaddingBottom>
+                            </Style>
+                          </Textbox>
+                        </CellContents>
+                      </TablixHeader>
+                      <TablixMembers>
+                        <TablixMember>
+                          <Group Name="Section">
+                            <GroupExpressions>
+                              <GroupExpression>=Fields!Section.Value</GroupExpression>
+                            </GroupExpressions>
+                          </Group>
+                          <SortExpressions>
+                            <SortExpression>
+                              <Value>=Fields!Section.Value</Value>
+                            </SortExpression>
+                          </SortExpressions>
+                          <TablixHeader>
+                            <Size>2.17361in</Size>
+                            <CellContents>
+                              <Textbox Name="Section">
+                                <CanGrow>true</CanGrow>
+                                <KeepTogether>true</KeepTogether>
+                                <Paragraphs>
+                                  <Paragraph>
+                                    <TextRuns>
+                                      <TextRun>
+                                        <Value>=Fields!Section.Value</Value>
+                                        <Style>
+                                          <FontFamily>Arial</FontFamily>
+                                        </Style>
+                                      </TextRun>
+                                    </TextRuns>
+                                    <Style />
+                                  </Paragraph>
+                                </Paragraphs>
+                                <rd:DefaultName>Section</rd:DefaultName>
+                                <Style>
+                                  <Border>
+                                    <Color>LightGrey</Color>
+                                    <Style>Solid</Style>
+                                  </Border>
+                                  <PaddingLeft>2pt</PaddingLeft>
+                                  <PaddingRight>2pt</PaddingRight>
+                                  <PaddingTop>2pt</PaddingTop>
+                                  <PaddingBottom>2pt</PaddingBottom>
+                                </Style>
+                              </Textbox>
+                            </CellContents>
+                          </TablixHeader>
+                          <TablixMembers>
+                            <TablixMember />
+                          </TablixMembers>
+                          <Visibility>
+                            <Hidden>true</Hidden>
+                            <ToggleItem>Course</ToggleItem>
+                          </Visibility>
+                        </TablixMember>
+                      </TablixMembers>
+                      <Visibility>
+                        <Hidden>true</Hidden>
+                        <ToggleItem>Path</ToggleItem>
+                      </Visibility>
+                    </TablixMember>
+                  </TablixMembers>
+                </TablixMember>
+              </TablixMembers>
+            </TablixRowHierarchy>
+            <DataSetName>MatrixDataSet</DataSetName>
+            <Top>6.12028in</Top>
+            <Left>0.18292in</Left>
+            <Height>0.5in</Height>
+            <Width>4.99764in</Width>
+            <ZIndex>13</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+            </Style>
+          </Tablix>
+          <Line Name="Line6">
+            <Top>6.12028in</Top>
+            <Left>0.18292in</Left>
+            <Height>0in</Height>
+            <Width>3.99764in</Width>
+            <ZIndex>14</ZIndex>
+            <Style>
+              <Border>
+                <Color>Orange</Color>
+                <Style>Solid</Style>
+              </Border>
+            </Style>
+          </Line>
+          <Image Name="ColaberryImage">
+            <Source>Embedded</Source>
+            <Value>ColaberryImage</Value>
+            <Sizing>FitProportional</Sizing>
+            <Top>6.80084in</Top>
+            <Left>3.74291in</Left>
+            <Height>0.65277in</Height>
+            <Width>1.93528in</Width>
+            <ZIndex>15</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+            </Style>
+          </Image>
+          <Textbox Name="Textbox62">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>CURRICULUM DASHBOARD</Value>
+                    <Style>
+                      <FontFamily>Comic Sans MS</FontFamily>
+                      <FontSize>20pt</FontSize>
+                      <FontWeight>Bold</FontWeight>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style>
+                  <TextAlign>Center</TextAlign>
+                </Style>
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox62</rd:DefaultName>
+            <Left>1.14806in</Left>
+            <Height>0.47917in</Height>
+            <Width>4.14125in</Width>
+            <ZIndex>16</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Chart Name="Chart3">
+            <ChartCategoryHierarchy>
+              <ChartMembers>
+                <ChartMember>
+                  <Group Name="ChartGroup" />
+                  <Label />
+                </ChartMember>
+              </ChartMembers>
+            </ChartCategoryHierarchy>
+            <ChartSeriesHierarchy>
+              <ChartMembers>
+                <ChartMember>
+                  <Label>Courses</Label>
+                </ChartMember>
+                <ChartMember>
+                  <Label>Events</Label>
+                </ChartMember>
+              </ChartMembers>
+            </ChartSeriesHierarchy>
+            <ChartData>
+              <ChartSeriesCollection>
+                <ChartSeries Name="Courses">
+                  <ChartDataPoints>
+                    <ChartDataPoint>
+                      <ChartDataPointValues>
+                        <Y>=Sum(Fields!Courses.Value)</Y>
+                      </ChartDataPointValues>
+                      <ChartDataLabel>
+                        <Style />
+                        <UseValueAsLabel>true</UseValueAsLabel>
+                        <Visible>true</Visible>
+                      </ChartDataLabel>
+                      <Style />
+                      <ChartMarker>
+                        <Style>
+                          <Color>LightGrey</Color>
+                        </Style>
+                      </ChartMarker>
+                      <DataElementOutput>Output</DataElementOutput>
+                    </ChartDataPoint>
+                  </ChartDataPoints>
+                  <Style />
+                  <ChartEmptyPoints>
+                    <Style />
+                    <ChartMarker>
+                      <Style />
+                    </ChartMarker>
+                    <ChartDataLabel>
+                      <Style />
+                    </ChartDataLabel>
+                  </ChartEmptyPoints>
+                  <ValueAxisName>Primary</ValueAxisName>
+                  <CategoryAxisName>Primary</CategoryAxisName>
+                  <ChartSmartLabel>
+                    <CalloutLineColor>Black</CalloutLineColor>
+                    <MinMovingDistance>0pt</MinMovingDistance>
+                  </ChartSmartLabel>
+                </ChartSeries>
+                <ChartSeries Name="Events">
+                  <ChartDataPoints>
+                    <ChartDataPoint>
+                      <ChartDataPointValues>
+                        <Y>=Sum(Fields!Events.Value)</Y>
+                      </ChartDataPointValues>
+                      <ChartDataLabel>
+                        <Style />
+                        <UseValueAsLabel>true</UseValueAsLabel>
+                        <Visible>true</Visible>
+                      </ChartDataLabel>
+                      <Style />
+                      <ChartMarker>
+                        <Style />
+                      </ChartMarker>
+                      <DataElementOutput>Output</DataElementOutput>
+                    </ChartDataPoint>
+                  </ChartDataPoints>
+                  <Style />
+                  <ChartEmptyPoints>
+                    <Style />
+                    <ChartMarker>
+                      <Style />
+                    </ChartMarker>
+                    <ChartDataLabel>
+                      <Style />
+                    </ChartDataLabel>
+                  </ChartEmptyPoints>
+                  <ValueAxisName>Primary</ValueAxisName>
+                  <CategoryAxisName>Primary</CategoryAxisName>
+                  <ChartSmartLabel>
+                    <CalloutLineColor>Black</CalloutLineColor>
+                    <MinMovingDistance>0pt</MinMovingDistance>
+                  </ChartSmartLabel>
+                </ChartSeries>
+              </ChartSeriesCollection>
+            </ChartData>
+            <ChartAreas>
+              <ChartArea Name="Default">
+                <ChartCategoryAxes>
+                  <ChartAxis Name="Primary">
+                    <Style>
+                      <Border>
+                        <Color>Gainsboro</Color>
+                        <Style>None</Style>
+                      </Border>
+                      <FontSize>8pt</FontSize>
+                      <Color>#5c5c5c</Color>
+                    </Style>
+                    <ChartAxisTitle>
+                      <Caption>Courese/Events</Caption>
+                      <Style>
+                        <FontSize>9pt</FontSize>
+                        <Color>#5c5c5c</Color>
+                      </Style>
+                    </ChartAxisTitle>
+                    <ChartMajorGridLines>
+                      <Enabled>False</Enabled>
+                      <Style>
+                        <Border>
+                          <Color>Gainsboro</Color>
+                        </Border>
+                      </Style>
+                    </ChartMajorGridLines>
+                    <ChartMinorGridLines>
+                      <Style>
+                        <Border>
+                          <Color>Gainsboro</Color>
+                          <Style>Dotted</Style>
+                        </Border>
+                      </Style>
+                    </ChartMinorGridLines>
+                    <ChartMajorTickMarks>
+                      <Style>
+                        <Border>
+                          <Color>Gainsboro</Color>
+                          <Style>None</Style>
+                        </Border>
+                      </Style>
+                    </ChartMajorTickMarks>
+                    <ChartMinorTickMarks>
+                      <Style>
+                        <Border>
+                          <Color>Gainsboro</Color>
+                        </Border>
+                      </Style>
+                      <Length>0.5</Length>
+                    </ChartMinorTickMarks>
+                    <CrossAt>NaN</CrossAt>
+                    <Minimum>NaN</Minimum>
+                    <Maximum>NaN</Maximum>
+                    <ChartAxisScaleBreak>
+                      <Style />
+                    </ChartAxisScaleBreak>
+                  </ChartAxis>
+                  <ChartAxis Name="Secondary">
+                    <Style>
+                      <Border>
+                        <Color>Gainsboro</Color>
+                        <Style>None</Style>
+                      </Border>
+                      <FontSize>8pt</FontSize>
+                      <Color>#5c5c5c</Color>
+                    </Style>
+                    <ChartAxisTitle>
+                      <Caption />
+                      <Style>
+                        <FontSize>9pt</FontSize>
+                        <Color>#5c5c5c</Color>
+                      </Style>
+                    </ChartAxisTitle>
+                    <ChartMajorGridLines>
+                      <Enabled>False</Enabled>
+                      <Style>
+                        <Border>
+                          <Color>Gainsboro</Color>
+                        </Border>
+                      </Style>
+                    </ChartMajorGridLines>
+                    <ChartMinorGridLines>
+                      <Style>
+                        <Border>
+                          <Color>Gainsboro</Color>
+                          <Style>Dotted</Style>
+                        </Border>
+                      </Style>
+                    </ChartMinorGridLines>
+                    <ChartMajorTickMarks>
+                      <Style>
+                        <Border>
+                          <Color>Gainsboro</Color>
+                          <Style>None</Style>
+                        </Border>
+                      </Style>
+                    </ChartMajorTickMarks>
+                    <ChartMinorTickMarks>
+                      <Style>
+                        <Border>
+                          <Color>Gainsboro</Color>
+                        </Border>
+                      </Style>
+                      <Length>0.5</Length>
+                    </ChartMinorTickMarks>
+                    <CrossAt>NaN</CrossAt>
+                    <Location>Opposite</Location>
+                    <Minimum>NaN</Minimum>
+                    <Maximum>NaN</Maximum>
+                    <ChartAxisScaleBreak>
+                      <Style />
+                    </ChartAxisScaleBreak>
+                  </ChartAxis>
+                </ChartCategoryAxes>
+                <ChartValueAxes>
+                  <ChartAxis Name="Primary">
+                    <Style>
+                      <Border>
+                        <Color>Gainsboro</Color>
+                        <Style>None</Style>
+                      </Border>
+                      <FontSize>8pt</FontSize>
+                      <Color>#5c5c5c</Color>
+                    </Style>
+                    <ChartAxisTitle>
+                      <Caption>Cuurriculum Counts</Caption>
+                      <Style>
+                        <FontSize>9pt</FontSize>
+                        <Color>#5c5c5c</Color>
+                      </Style>
+                    </ChartAxisTitle>
+                    <ChartMajorGridLines>
+                      <Style>
+                        <Border>
+                          <Color>Gainsboro</Color>
+                        </Border>
+                      </Style>
+                    </ChartMajorGridLines>
+                    <ChartMinorGridLines>
+                      <Style>
+                        <Border>
+                          <Color>Gainsboro</Color>
+                          <Style>Dotted</Style>
+                        </Border>
+                      </Style>
+                    </ChartMinorGridLines>
+                    <ChartMajorTickMarks>
+                      <Style>
+                        <Border>
+                          <Color>Gainsboro</Color>
+                          <Style>None</Style>
+                        </Border>
+                      </Style>
+                    </ChartMajorTickMarks>
+                    <ChartMinorTickMarks>
+                      <Style>
+                        <Border>
+                          <Color>Gainsboro</Color>
+                        </Border>
+                      </Style>
+                      <Length>0.5</Length>
+                    </ChartMinorTickMarks>
+                    <CrossAt>NaN</CrossAt>
+                    <Minimum>NaN</Minimum>
+                    <Maximum>NaN</Maximum>
+                    <ChartAxisScaleBreak>
+                      <Style />
+                    </ChartAxisScaleBreak>
+                  </ChartAxis>
+                  <ChartAxis Name="Secondary">
+                    <Style>
+                      <Border>
+                        <Color>Gainsboro</Color>
+                        <Style>None</Style>
+                      </Border>
+                      <FontSize>8pt</FontSize>
+                      <Color>#5c5c5c</Color>
+                    </Style>
+                    <ChartAxisTitle>
+                      <Caption />
+                      <Style>
+                        <FontSize>9pt</FontSize>
+                        <Color>#5c5c5c</Color>
+                      </Style>
+                    </ChartAxisTitle>
+                    <ChartMajorGridLines>
+                      <Style>
+                        <Border>
+                          <Color>Gainsboro</Color>
+                        </Border>
+                      </Style>
+                    </ChartMajorGridLines>
+                    <ChartMinorGridLines>
+                      <Style>
+                        <Border>
+                          <Color>Gainsboro</Color>
+                          <Style>Dotted</Style>
+                        </Border>
+                      </Style>
+                    </ChartMinorGridLines>
+                    <ChartMajorTickMarks>
+                      <Style>
+                        <Border>
+                          <Color>Gainsboro</Color>
+                          <Style>None</Style>
+                        </Border>
+                      </Style>
+                    </ChartMajorTickMarks>
+                    <ChartMinorTickMarks>
+                      <Style>
+                        <Border>
+                          <Color>Gainsboro</Color>
+                        </Border>
+                      </Style>
+                      <Length>0.5</Length>
+                    </ChartMinorTickMarks>
+                    <CrossAt>NaN</CrossAt>
+                    <Location>Opposite</Location>
+                    <Minimum>NaN</Minimum>
+                    <Maximum>NaN</Maximum>
+                    <ChartAxisScaleBreak>
+                      <Style />
+                    </ChartAxisScaleBreak>
+                  </ChartAxis>
+                </ChartValueAxes>
+                <ChartThreeDProperties>
+                  <Enabled>true</Enabled>
+                  <Clustered>true</Clustered>
+                </ChartThreeDProperties>
+                <Style>
+                  <BackgroundColor>LightGrey</BackgroundColor>
+                  <BackgroundGradientType>None</BackgroundGradientType>
+                </Style>
+              </ChartArea>
+            </ChartAreas>
+            <ChartLegends>
+              <ChartLegend Name="Default">
+                <Style>
+                  <BackgroundGradientType>None</BackgroundGradientType>
+                  <FontSize>8pt</FontSize>
+                </Style>
+                <Position>BottomRight</Position>
+                <ChartLegendTitle>
+                  <Caption />
+                  <Style>
+                    <FontSize>8pt</FontSize>
+                    <FontWeight>Bold</FontWeight>
+                    <TextAlign>Center</TextAlign>
+                  </Style>
+                </ChartLegendTitle>
+                <HeaderSeparatorColor>Black</HeaderSeparatorColor>
+                <ColumnSeparatorColor>Black</ColumnSeparatorColor>
+              </ChartLegend>
+            </ChartLegends>
+            <Palette>EarthTones</Palette>
+            <ChartBorderSkin>
+              <Style>
+                <BackgroundColor>Gray</BackgroundColor>
+                <BackgroundGradientType>None</BackgroundGradientType>
+                <Color>White</Color>
+              </Style>
+            </ChartBorderSkin>
+            <ChartNoDataMessage Name="NoDataMessage">
+              <Caption>No Data Available</Caption>
+              <Style>
+                <BackgroundGradientType>None</BackgroundGradientType>
+                <FontWeight>Bold</FontWeight>
+                <TextAlign>General</TextAlign>
+                <VerticalAlign>Top</VerticalAlign>
+              </Style>
+            </ChartNoDataMessage>
+            <DataSetName>CurriculumCountDataSet</DataSetName>
+            <Top>3.13889in</Top>
+            <Left>2.78944in</Left>
+            <Height>2.52778in</Height>
+            <Width>3.07166in</Width>
+            <ZIndex>17</ZIndex>
+            <Style>
+              <Border>
+                <Color>LightGrey</Color>
+                <Style>None</Style>
+              </Border>
+              <BackgroundColor>White</BackgroundColor>
+              <BackgroundGradientType>None</BackgroundGradientType>
+            </Style>
+          </Chart>
+          <Chart Name="Chart4">
+            <ChartCategoryHierarchy>
+              <ChartMembers>
+                <ChartMember>
+                  <Group Name="ChartGroup2" />
+                  <Label />
+                </ChartMember>
+              </ChartMembers>
+            </ChartCategoryHierarchy>
+            <ChartSeriesHierarchy>
+              <ChartMembers>
+                <ChartMember>
+                  <Label>Paths</Label>
+                </ChartMember>
+                <ChartMember>
+                  <Label>Courses</Label>
+                </ChartMember>
+                <ChartMember>
+                  <Label>Events</Label>
+                </ChartMember>
+                <ChartMember>
+                  <Label>Sections</Label>
+                </ChartMember>
+              </ChartMembers>
+            </ChartSeriesHierarchy>
+            <ChartData>
+              <ChartSeriesCollection>
+                <ChartSeries Name="Paths">
+                  <ChartDataPoints>
+                    <ChartDataPoint>
+                      <ChartDataPointValues>
+                        <Y>=Sum(Fields!Paths.Value)</Y>
+                      </ChartDataPointValues>
+                      <ChartDataLabel>
+                        <Style />
+                        <UseValueAsLabel>true</UseValueAsLabel>
+                        <Visible>true</Visible>
+                      </ChartDataLabel>
+                      <Style />
+                      <ChartMarker>
+                        <Style />
+                      </ChartMarker>
+                      <DataElementOutput>Output</DataElementOutput>
+                    </ChartDataPoint>
+                  </ChartDataPoints>
+                  <Type>Shape</Type>
+                  <Subtype>ExplodedPie</Subtype>
+                  <Style />
+                  <ChartEmptyPoints>
+                    <Style />
+                    <ChartMarker>
+                      <Style />
+                    </ChartMarker>
+                    <ChartDataLabel>
+                      <Style />
+                    </ChartDataLabel>
+                  </ChartEmptyPoints>
+                  <ValueAxisName>Primary</ValueAxisName>
+                  <CategoryAxisName>Primary</CategoryAxisName>
+                  <ChartSmartLabel>
+                    <CalloutLineColor>Black</CalloutLineColor>
+                    <MinMovingDistance>0pt</MinMovingDistance>
+                  </ChartSmartLabel>
+                </ChartSeries>
+                <ChartSeries Name="Courses">
+                  <ChartDataPoints>
+                    <ChartDataPoint>
+                      <ChartDataPointValues>
+                        <Y>=Sum(Fields!Courses.Value)</Y>
+                      </ChartDataPointValues>
+                      <ChartDataLabel>
+                        <Style />
+                        <UseValueAsLabel>true</UseValueAsLabel>
+                        <Visible>true</Visible>
+                      </ChartDataLabel>
+                      <Style />
+                      <ChartMarker>
+                        <Style>
+                          <Color>LightGrey</Color>
+                        </Style>
+                      </ChartMarker>
+                      <DataElementOutput>Output</DataElementOutput>
+                    </ChartDataPoint>
+                  </ChartDataPoints>
+                  <Type>Shape</Type>
+                  <Subtype>ExplodedPie</Subtype>
+                  <Style />
+                  <ChartEmptyPoints>
+                    <Style />
+                    <ChartMarker>
+                      <Style />
+                    </ChartMarker>
+                    <ChartDataLabel>
+                      <Style />
+                    </ChartDataLabel>
+                  </ChartEmptyPoints>
+                  <ValueAxisName>Primary</ValueAxisName>
+                  <CategoryAxisName>Primary</CategoryAxisName>
+                  <ChartSmartLabel>
+                    <CalloutLineColor>Black</CalloutLineColor>
+                    <MinMovingDistance>0pt</MinMovingDistance>
+                  </ChartSmartLabel>
+                </ChartSeries>
+                <ChartSeries Name="Events">
+                  <ChartDataPoints>
+                    <ChartDataPoint>
+                      <ChartDataPointValues>
+                        <Y>=Sum(Fields!Events.Value)</Y>
+                      </ChartDataPointValues>
+                      <ChartDataLabel>
+                        <Style />
+                        <UseValueAsLabel>true</UseValueAsLabel>
+                        <Visible>true</Visible>
+                      </ChartDataLabel>
+                      <Style />
+                      <ChartMarker>
+                        <Style />
+                      </ChartMarker>
+                      <DataElementOutput>Output</DataElementOutput>
+                    </ChartDataPoint>
+                  </ChartDataPoints>
+                  <Type>Shape</Type>
+                  <Subtype>ExplodedPie</Subtype>
+                  <Style />
+                  <ChartEmptyPoints>
+                    <Style />
+                    <ChartMarker>
+                      <Style />
+                    </ChartMarker>
+                    <ChartDataLabel>
+                      <Style />
+                    </ChartDataLabel>
+                  </ChartEmptyPoints>
+                  <ValueAxisName>Primary</ValueAxisName>
+                  <CategoryAxisName>Primary</CategoryAxisName>
+                  <ChartSmartLabel>
+                    <CalloutLineColor>Black</CalloutLineColor>
+                    <MinMovingDistance>0pt</MinMovingDistance>
+                  </ChartSmartLabel>
+                </ChartSeries>
+                <ChartSeries Name="Sections">
+                  <ChartDataPoints>
+                    <ChartDataPoint>
+                      <ChartDataPointValues>
+                        <Y>=Sum(Fields!Sections.Value)</Y>
+                      </ChartDataPointValues>
+                      <ChartDataLabel>
+                        <Style />
+                        <UseValueAsLabel>true</UseValueAsLabel>
+                        <Visible>true</Visible>
+                      </ChartDataLabel>
+                      <Style />
+                      <ChartMarker>
+                        <Style />
+                      </ChartMarker>
+                      <DataElementOutput>Output</DataElementOutput>
+                    </ChartDataPoint>
+                  </ChartDataPoints>
+                  <Type>Shape</Type>
+                  <Subtype>ExplodedPie</Subtype>
+                  <Style />
+                  <ChartEmptyPoints>
+                    <Style />
+                    <ChartMarker>
+                      <Style />
+                    </ChartMarker>
+                    <ChartDataLabel>
+                      <Style />
+                    </ChartDataLabel>
+                  </ChartEmptyPoints>
+                  <ValueAxisName>Primary</ValueAxisName>
+                  <CategoryAxisName>Primary</CategoryAxisName>
+                  <ChartSmartLabel>
+                    <CalloutLineColor>Black</CalloutLineColor>
+                    <MinMovingDistance>0pt</MinMovingDistance>
+                  </ChartSmartLabel>
+                </ChartSeries>
+              </ChartSeriesCollection>
+            </ChartData>
+            <ChartAreas>
+              <ChartArea Name="Default">
+                <ChartCategoryAxes>
+                  <ChartAxis Name="Primary">
+                    <Style>
+                      <Border>
+                        <Color>Gainsboro</Color>
+                        <Style>None</Style>
+                      </Border>
+                      <FontSize>8pt</FontSize>
+                      <Color>#5c5c5c</Color>
+                    </Style>
+                    <ChartAxisTitle>
+                      <Caption>Courese/Events</Caption>
+                      <Style>
+                        <FontSize>9pt</FontSize>
+                        <Color>#5c5c5c</Color>
+                      </Style>
+                    </ChartAxisTitle>
+                    <ChartMajorGridLines>
+                      <Enabled>False</Enabled>
+                      <Style>
+                        <Border>
+                          <Color>Gainsboro</Color>
+                        </Border>
+                      </Style>
+                    </ChartMajorGridLines>
+                    <ChartMinorGridLines>
+                      <Style>
+                        <Border>
+                          <Color>Gainsboro</Color>
+                          <Style>Dotted</Style>
+                        </Border>
+                      </Style>
+                    </ChartMinorGridLines>
+                    <ChartMajorTickMarks>
+                      <Style>
+                        <Border>
+                          <Color>Gainsboro</Color>
+                          <Style>None</Style>
+                        </Border>
+                      </Style>
+                    </ChartMajorTickMarks>
+                    <ChartMinorTickMarks>
+                      <Style>
+                        <Border>
+                          <Color>Gainsboro</Color>
+                        </Border>
+                      </Style>
+                      <Length>0.5</Length>
+                    </ChartMinorTickMarks>
+                    <CrossAt>NaN</CrossAt>
+                    <Minimum>NaN</Minimum>
+                    <Maximum>NaN</Maximum>
+                    <ChartAxisScaleBreak>
+                      <Style />
+                    </ChartAxisScaleBreak>
+                  </ChartAxis>
+                  <ChartAxis Name="Secondary">
+                    <Style>
+                      <Border>
+                        <Color>Gainsboro</Color>
+                        <Style>None</Style>
+                      </Border>
+                      <FontSize>8pt</FontSize>
+                      <Color>#5c5c5c</Color>
+                    </Style>
+                    <ChartAxisTitle>
+                      <Caption />
+                      <Style>
+                        <FontSize>9pt</FontSize>
+                        <Color>#5c5c5c</Color>
+                      </Style>
+                    </ChartAxisTitle>
+                    <ChartMajorGridLines>
+                      <Enabled>False</Enabled>
+                      <Style>
+                        <Border>
+                          <Color>Gainsboro</Color>
+                        </Border>
+                      </Style>
+                    </ChartMajorGridLines>
+                    <ChartMinorGridLines>
+                      <Style>
+                        <Border>
+                          <Color>Gainsboro</Color>
+                          <Style>Dotted</Style>
+                        </Border>
+                      </Style>
+                    </ChartMinorGridLines>
+                    <ChartMajorTickMarks>
+                      <Style>
+                        <Border>
+                          <Color>Gainsboro</Color>
+                          <Style>None</Style>
+                        </Border>
+                      </Style>
+                    </ChartMajorTickMarks>
+                    <ChartMinorTickMarks>
+                      <Style>
+                        <Border>
+                          <Color>Gainsboro</Color>
+                        </Border>
+                      </Style>
+                      <Length>0.5</Length>
+                    </ChartMinorTickMarks>
+                    <CrossAt>NaN</CrossAt>
+                    <Location>Opposite</Location>
+                    <Minimum>NaN</Minimum>
+                    <Maximum>NaN</Maximum>
+                    <ChartAxisScaleBreak>
+                      <Style />
+                    </ChartAxisScaleBreak>
+                  </ChartAxis>
+                </ChartCategoryAxes>
+                <ChartValueAxes>
+                  <ChartAxis Name="Primary">
+                    <Style>
+                      <Border>
+                        <Color>Gainsboro</Color>
+                        <Style>None</Style>
+                      </Border>
+                      <FontSize>8pt</FontSize>
+                      <Color>#5c5c5c</Color>
+                    </Style>
+                    <ChartAxisTitle>
+                      <Caption>Cuurriculum Counts</Caption>
+                      <Style>
+                        <FontSize>9pt</FontSize>
+                        <Color>#5c5c5c</Color>
+                      </Style>
+                    </ChartAxisTitle>
+                    <ChartMajorGridLines>
+                      <Style>
+                        <Border>
+                          <Color>Gainsboro</Color>
+                        </Border>
+                      </Style>
+                    </ChartMajorGridLines>
+                    <ChartMinorGridLines>
+                      <Style>
+                        <Border>
+                          <Color>Gainsboro</Color>
+                          <Style>Dotted</Style>
+                        </Border>
+                      </Style>
+                    </ChartMinorGridLines>
+                    <ChartMajorTickMarks>
+                      <Style>
+                        <Border>
+                          <Color>Gainsboro</Color>
+                          <Style>None</Style>
+                        </Border>
+                      </Style>
+                    </ChartMajorTickMarks>
+                    <ChartMinorTickMarks>
+                      <Style>
+                        <Border>
+                          <Color>Gainsboro</Color>
+                        </Border>
+                      </Style>
+                      <Length>0.5</Length>
+                    </ChartMinorTickMarks>
+                    <CrossAt>NaN</CrossAt>
+                    <Minimum>NaN</Minimum>
+                    <Maximum>NaN</Maximum>
+                    <ChartAxisScaleBreak>
+                      <Style />
+                    </ChartAxisScaleBreak>
+                  </ChartAxis>
+                  <ChartAxis Name="Secondary">
+                    <Style>
+                      <Border>
+                        <Color>Gainsboro</Color>
+                        <Style>None</Style>
+                      </Border>
+                      <FontSize>8pt</FontSize>
+                      <Color>#5c5c5c</Color>
+                    </Style>
+                    <ChartAxisTitle>
+                      <Caption />
+                      <Style>
+                        <FontSize>9pt</FontSize>
+                        <Color>#5c5c5c</Color>
+                      </Style>
+                    </ChartAxisTitle>
+                    <ChartMajorGridLines>
+                      <Style>
+                        <Border>
+                          <Color>Gainsboro</Color>
+                        </Border>
+                      </Style>
+                    </ChartMajorGridLines>
+                    <ChartMinorGridLines>
+                      <Style>
+                        <Border>
+                          <Color>Gainsboro</Color>
+                          <Style>Dotted</Style>
+                        </Border>
+                      </Style>
+                    </ChartMinorGridLines>
+                    <ChartMajorTickMarks>
+                      <Style>
+                        <Border>
+                          <Color>Gainsboro</Color>
+                          <Style>None</Style>
+                        </Border>
+                      </Style>
+                    </ChartMajorTickMarks>
+                    <ChartMinorTickMarks>
+                      <Style>
+                        <Border>
+                          <Color>Gainsboro</Color>
+                        </Border>
+                      </Style>
+                      <Length>0.5</Length>
+                    </ChartMinorTickMarks>
+                    <CrossAt>NaN</CrossAt>
+                    <Location>Opposite</Location>
+                    <Minimum>NaN</Minimum>
+                    <Maximum>NaN</Maximum>
+                    <ChartAxisScaleBreak>
+                      <Style />
+                    </ChartAxisScaleBreak>
+                  </ChartAxis>
+                </ChartValueAxes>
+                <ChartThreeDProperties>
+                  <Enabled>true</Enabled>
+                </ChartThreeDProperties>
+                <Style>
+                  <BackgroundColor>LightGrey</BackgroundColor>
+                  <BackgroundGradientType>None</BackgroundGradientType>
+                </Style>
+              </ChartArea>
+            </ChartAreas>
+            <ChartLegends>
+              <ChartLegend Name="Default">
+                <Style>
+                  <BackgroundGradientType>None</BackgroundGradientType>
+                  <FontSize>8pt</FontSize>
+                </Style>
+                <Position>BottomCenter</Position>
+                <ChartLegendTitle>
+                  <Caption />
+                  <Style>
+                    <FontSize>8pt</FontSize>
+                    <FontWeight>Bold</FontWeight>
+                    <TextAlign>Center</TextAlign>
+                  </Style>
+                </ChartLegendTitle>
+                <HeaderSeparatorColor>Black</HeaderSeparatorColor>
+                <ColumnSeparatorColor>Black</ColumnSeparatorColor>
+              </ChartLegend>
+            </ChartLegends>
+            <Palette>EarthTones</Palette>
+            <ChartBorderSkin>
+              <Style>
+                <BackgroundColor>Gray</BackgroundColor>
+                <BackgroundGradientType>None</BackgroundGradientType>
+                <Color>White</Color>
+              </Style>
+            </ChartBorderSkin>
+            <ChartNoDataMessage Name="NoDataMessage">
+              <Caption>No Data Available</Caption>
+              <Style>
+                <BackgroundGradientType>None</BackgroundGradientType>
+                <FontWeight>Bold</FontWeight>
+                <TextAlign>General</TextAlign>
+                <VerticalAlign>Top</VerticalAlign>
+              </Style>
+            </ChartNoDataMessage>
+            <DataSetName>CurriculumCountDataSet</DataSetName>
+            <Top>3.13889in</Top>
+            <Left>0.18292in</Left>
+            <Height>2.52778in</Height>
+            <Width>2.00695in</Width>
+            <ZIndex>18</ZIndex>
+            <Style>
+              <Border>
+                <Color>LightGrey</Color>
+                <Style>None</Style>
+              </Border>
+              <BackgroundColor>White</BackgroundColor>
+              <BackgroundGradientType>None</BackgroundGradientType>
+            </Style>
+          </Chart>
+          <Textbox Name="Textbox20">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>Curriculum Count</Value>
+                    <Style>
+                      <FontWeight>Bold</FontWeight>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox15</rd:DefaultName>
+            <Top>2.81944in</Top>
+            <Left>2.78944in</Left>
+            <Height>0.26389in</Height>
+            <Width>1.74541in</Width>
+            <ZIndex>19</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Line Name="Line7">
+            <Top>3.08333in</Top>
+            <Left>2.78944in</Left>
+            <Height>0in</Height>
+            <Width>3.07166in</Width>
+            <ZIndex>20</ZIndex>
+            <Style>
+              <Border>
+                <Color>Orange</Color>
+                <Style>Solid</Style>
+              </Border>
+            </Style>
+          </Line>
+        </ReportItems>
+        <Height>7.64111in</Height>
+        <Style />
+      </Body>
+      <Width>6.66671in</Width>
+      <Page>
+        <LeftMargin>1in</LeftMargin>
+        <RightMargin>1in</RightMargin>
+        <TopMargin>1in</TopMargin>
+        <BottomMargin>1in</BottomMargin>
+        <Style />
+      </Page>
+    </ReportSection>
+  </ReportSections>
+  <ReportParameters>
+    <ReportParameter Name="Path">
+      <DataType>String</DataType>
+      <DefaultValue>
+        <DataSetReference>
+          <DataSetName>PathParamDataSet</DataSetName>
+          <ValueField>Path</ValueField>
+        </DataSetReference>
+      </DefaultValue>
+      <Prompt>Path</Prompt>
+      <ValidValues>
+        <DataSetReference>
+          <DataSetName>PathParamDataSet</DataSetName>
+          <ValueField>Path</ValueField>
+          <LabelField>Path</LabelField>
+        </DataSetReference>
+      </ValidValues>
+    </ReportParameter>
+    <ReportParameter Name="Course">
+      <DataType>String</DataType>
+      <DefaultValue>
+        <DataSetReference>
+          <DataSetName>CourseParamDataSet</DataSetName>
+          <ValueField>Courses</ValueField>
+        </DataSetReference>
+      </DefaultValue>
+      <Prompt>Course</Prompt>
+      <ValidValues>
+        <DataSetReference>
+          <DataSetName>CourseParamDataSet</DataSetName>
+          <ValueField>Courses</ValueField>
+          <LabelField>Courses</LabelField>
+        </DataSetReference>
+      </ValidValues>
+      <MultiValue>true</MultiValue>
+    </ReportParameter>
+    <ReportParameter Name="Sections">
+      <DataType>String</DataType>
+      <DefaultValue>
+        <DataSetReference>
+          <DataSetName>SectionParamDataSet</DataSetName>
+          <ValueField>Sections</ValueField>
+        </DataSetReference>
+      </DefaultValue>
+      <Prompt>Sections</Prompt>
+      <ValidValues>
+        <DataSetReference>
+          <DataSetName>SectionParamDataSet</DataSetName>
+          <ValueField>Sections</ValueField>
+          <LabelField>Sections</LabelField>
+        </DataSetReference>
+      </ValidValues>
+      <MultiValue>true</MultiValue>
+    </ReportParameter>
+    <ReportParameter Name="Events">
+      <DataType>String</DataType>
+      <DefaultValue>
+        <DataSetReference>
+          <DataSetName>EventParamDataSet</DataSetName>
+          <ValueField>Events</ValueField>
+        </DataSetReference>
+      </DefaultValue>
+      <Prompt>Events</Prompt>
+      <ValidValues>
+        <DataSetReference>
+          <DataSetName>EventParamDataSet</DataSetName>
+          <ValueField>Events</ValueField>
+          <LabelField>Events</LabelField>
+        </DataSetReference>
+      </ValidValues>
+      <MultiValue>true</MultiValue>
+    </ReportParameter>
+  </ReportParameters>
+  <ReportParametersLayout>
+    <GridLayoutDefinition>
+      <NumberOfColumns>4</NumberOfColumns>
+      <NumberOfRows>2</NumberOfRows>
+      <CellDefinitions>
+        <CellDefinition>
+          <ColumnIndex>0</ColumnIndex>
+          <RowIndex>0</RowIndex>
+          <ParameterName>Path</ParameterName>
+        </CellDefinition>
+        <CellDefinition>
+          <ColumnIndex>1</ColumnIndex>
+          <RowIndex>0</RowIndex>
+          <ParameterName>Course</ParameterName>
+        </CellDefinition>
+        <CellDefinition>
+          <ColumnIndex>2</ColumnIndex>
+          <RowIndex>0</RowIndex>
+          <ParameterName>Sections</ParameterName>
+        </CellDefinition>
+        <CellDefinition>
+          <ColumnIndex>3</ColumnIndex>
+          <RowIndex>0</RowIndex>
+          <ParameterName>Events</ParameterName>
+        </CellDefinition>
+      </CellDefinitions>
+    </GridLayoutDefinition>
+  </ReportParametersLayout>
+  <EmbeddedImages>
+    <EmbeddedImage Name="ColaberryImage">
+      <MIMEType>image/jpeg</MIMEType>
+      <ImageData>/9j/4AAQSkZJRgABAQEAkACQAAD/2wBDAAMCAgMCAgMDAwMEAwMEBQgFBQQEBQoHBwYIDAoMDAsKCwsNDhIQDQ4RDgsLEBYQERMUFRUVDA8XGBYUGBIUFRT/2wBDAQMEBAUEBQkFBQkUDQsNFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBT/wAARCADrAoMDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD9U6KKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACi
+iigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKQ9KAFoqvJIVkA34GOleV+KtY1dvGFxpkuo3WnWqxCS2SFyhmHdi45z/s1x4nExwsOeS0FJ8queuUV4nb/EPXPCcxa/un1nSANzSsgWdB3Ix94D3r0Twr4z0vxnYxXmj6nHqFu3O6NvmH+yy9jWVDH0MRpF69upnGrGR1FFVgztKcEbR1HPFS5PGOa7+ZGy1JKKZmk3+9VqFiSikX1paBBRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFI3Sm7vekwH0VE0h2nHWq8179mj8yZ1ijHVnOAKTlFK7Yr66lvdRuritW+LHhrR5Ak2oKz/9MhurFk+PWhRuyrDPIoPD
+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
+/PX9un/ks0f/AGD4v5V+hLKa8R+LX7Mfh34veKhrmr3d1bzxwiDbCQAVHevQwVaOHq+0nseTmdCWJw/sodWh/wCx7/yQPRP+uk3/AKGa9sj6Vx3wt+H9n8MfBdl4c06aSa0tdxSSY/M2Tnmuyj6VyVZc1WU11OzC03Sw9OD3SX5DqKKKzOoQgelVJl3AjGc8Vbqhf3UVjazXM7hIoUMjMTgAAZo6he2p+a/7UHgO3+Hvxg1C1s1SOxvU+2xIpyYw4yyn/gWa9n/YN+HAaPUvGl3Bg5+y2JYYO0/eNfPfxL8TX3xu+Md5cWoYS6jei0s4+pEYO1fwxk1+j/w58F2/gHwdo+g2gG21hVXOPvPj5ifxr6TF1508LChPd7+iPi8upQxGMq1l8EXp89jskAzT6NoFLXzZ9oFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAIeaQLinUUAJtHpTGhVs5H61JRRsAzy124xxQsKr0FPooFbW40xqwwR/Sk8tcYxxT6KB+Y0IF6UKu2nUUAFNZd3Bp1FADPLUrtIyPejy124IyKfRQAxYUTotJ5EfZAP93ipKKQDPJUnJGTR5a4xin0Ux3G7BjFIYVbORnIxT6KBEYgQY496csar90Yp1FAb7jWUN1o2CnUUAR+Qn90D6UvlIeSoJ+lPooFbqNMYPak8lPSn0UD33Int0kwGGcUrQIwAK8CpKKAGCNV6DHel2inUUAR+RH/cXP0o8lMY24HtUlFGweY3y144xSGJD/CKfRSsgI/JTaFC4HpS+WOuKfRTATaKMUtFACYo2ilooAaUDdRmjy19KdRQKyGNCrdR+RIpPJTg7c/WpKKVkh77jPLGc459adtpaKYxpjU9qPLXAGOlOopCG7R0p1FFMAphhRiSR19zT6KVk9wGrGF6ClAxS0UwCmtntTqa2e1ICOZisZ559R2968A/bE+Jg8C/CubT7eXbqOtk2kfOCqY+dvyr32Tf
+8vyk8+lfB37Vnhn4h/Ev4lTtYeC9du9K05RBbSR2MjxuP4mUgc5PevQwVKM66lN6I8nMqs6eGcaad3poZ37Efw7TxV8QJ/EU6M9tpKhdzD5TKRwPrjn8a/QGOIbtxHNeXfs7/C9vhX8MdO02SEpqExNxdZXDeY3J3e46e1eqLu2jjn6VOMrutVk9wy3DLC4aMGtWTUUUVxHrBRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAF
+FFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAf/9k=</ImageData>
+    </EmbeddedImage>
+  </EmbeddedImages>
+  <rd:ReportUnitType>Inch</rd:ReportUnitType>
+  <rd:ReportID>42deb95f-82b1-400d-8924-60e666fabeeb</rd:ReportID>
+</Report>
